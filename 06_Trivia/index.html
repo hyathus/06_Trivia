@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Generador de Trivia</title>
+<script src="/script.js"></script>
+</head>
+<body>
+<h1>Generador de Trivia</h1>
+<form id="trivia-form">
+    <label for="difficulty">Dificultad:</label>
+    <select name="difficulty" id="difficulty">
+    <option value="easy">Fácil</option>
+    <option value="medium">Medio</option>
+    <option value="hard">Difícil</option>
+    </select>
+    <br>
+    <label for="type">Tipo de pregunta:</label>
+    <select name="type" id="type">
+    <option value="multiple">Elección múltiple</option>
+    <option value="boolean">Verdadero o Falso</option>
+    </select>
+    <br>
+    <label for="category">Categoría:</label>
+    <select name="category" id="category">
+    <option value="9">Conocimiento general</option>
+    <option value="10">Entretenimiento: Libros</option>
+    <option value="11">Entretenimiento: Películas</option>
+    <option value="12">Entretenimiento: Música</option>
+    <option value="13">Entretenimiento: Musicales y Teatro</option>
+    <option value="14">Entretenimiento: Televisión</option>
+    <option value="15">Entretenimiento: Videojuegos</option>
+    <option value="16">Entretenimiento: Juegos de mesa</option>
+    <option value="17">Ciencia y naturaleza</option>
+    <option value="18">Ciencia: Computadoras</option>
+    <option value="19">Ciencia: Matemáticas</option>
+    <option value="20">Mitología</option>
+    <option value="21">Deportes</option>
+    <option value="22">Geografía</option>
+    <option value="23">Historia</option>
+    <option value="24">Política</option>
+    <option value="25">Arte</option>
+    <option value="26">Celebridades</option>
+    <option value="27">Animales</option>
+    <option value="28">Vehículos</option>
+    <option value="29">Entretenimiento: Comics</option>
+    <option value="30">Ciencia: Dispositivos</option>
+    <option value="31">Entretenimiento: Anime y Manga Japonés</option>
+    <option value="32">Entretenimiento: Dibujos animados y Animaciones</option>
+    </select>
+    <br>
+    <button type="submit">Generar Trivia</button>
+</form>
+<div id="trivia-questions"></div>
+<button id="submit-answers">Enviar Respuestas</button>
+<div id="results"></div>
+<div id="results"></div>
+<button id="newTriviaButton">Crear nueva trivia</button>
+
+<script>
+    const triviaForm = document.querySelector('#trivia-form');
+    const triviaQuestions = document.querySelector('#trivia-questions');
+    const submitAnswersButton = document.querySelector('#submit-answers');
+    const results = document.querySelector('#results');
+    let questions = [];
+
+    triviaForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const formData = new FormData(triviaForm);
+    const difficulty = formData.get('difficulty');
+    const type = formData.get('type');
+    const category = formData.get('category');
+    const response = await fetch(`https://opentdb.com/api.php?amount=10&difficulty=${difficulty}&type=${type}&category=${category}`);
+    const data = await response.json();
+    questions = data.results;
+    showQuestions();
+    });
+
+    function showQuestions() {
+    triviaQuestions.innerHTML = '';
+    questions.forEach((question, index) => {
+        const questionDiv = document.createElement('div');
+        const questionNumber = index + 1;
+        const questionText = document.createElement('h2');
+        questionText.textContent = `${questionNumber}. ${question.question}`;
+        const answersList = document.createElement('ul');
+
+        question.incorrect_answers.forEach(answer => {
+        const answerItem = document.createElement('li');
+        const answerInput = document.createElement('input');
+        answerInput.type = 'radio';
+        answerInput.name = `question-${index}`;
+        answerInput.value = answer;
+        answerItem.appendChild(answerInput);
+        const answerLabel = document.createElement('label');
+        answerLabel.textContent = answer;
+        answerItem.appendChild(answerLabel);
+        answersList.appendChild(answerItem);
+        });
+
+        const correctAnswerItem = document.createElement('li');
+        const correctAnswerInput = document.createElement('input');
+        correctAnswerInput.type = 'radio';
+        correctAnswerInput.name = `question-${index}`;
+        correctAnswerInput.value = question.correct_answer;
+        correctAnswerItem.appendChild(correctAnswerInput);
+        const correctAnswerLabel = document.createElement('label');
+        correctAnswerLabel.textContent = question.correct_answer;
+        correctAnswerItem.appendChild(correctAnswerLabel);
+        answersList.appendChild(correctAnswerItem);
+
+        questionDiv.appendChild(questionText);
+        questionDiv.appendChild(answersList);
+        triviaQuestions.appendChild(questionDiv);
+    });
+
+    submitAnswersButton.disabled = false;
+    }
+
+submitAnswersButton.addEventListener('click', event => {
+    event.preventDefault();
+
+    let score = 0;
+    const userAnswers = [];
+    questions.forEach((question, index) => {
+        const answer = document.querySelector(`input[name="question-${index}"]:checked`);
+        if (answer && answer.value === question.correct_answer) {
+        score += 100;
+        }
+        userAnswers.push(answer ? answer.value : null);
+    });
+
+    const scoreText = `Your final score is: ${score}`;
+    const userAnswersText = `Your answers: ${userAnswers.join(', ')}`;
+    results.innerHTML = `${scoreText}<br>${userAnswersText}`;
+    submitAnswersButton.disabled = true;
+    });
+
+    const newTriviaButton = document.getElementById('newTriviaButton');
+newTriviaButton.addEventListener('click', () => {
+window.location.reload();
+});
+</script>
+</body>
+</html>
